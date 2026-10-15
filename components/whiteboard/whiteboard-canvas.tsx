@@ -3,6 +3,7 @@
 import type React from "react"
 import { useRef, useEffect, useCallback } from "react"
 import type { DrawElement, Point, ViewportState } from "@/lib/whiteboard-types"
+import { INK, INK_ON_DARK } from "@/lib/whiteboard-types"
 
 interface CanvasProps {
   elements: DrawElement[]
@@ -55,29 +56,27 @@ export function WhiteboardCanvas({
 
   const drawGrid = useCallback(
     (ctx: CanvasRenderingContext2D, width: number, height: number) => {
-      const gridSize = 20 * (window.devicePixelRatio || 1)
-      ctx.strokeStyle = isDarkMode ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.1)"
-      ctx.lineWidth = 1
-      for (let x = 0; x <= width; x += gridSize) {
-        ctx.beginPath()
-        ctx.moveTo(x, 0)
-        ctx.lineTo(x, height)
-        ctx.stroke()
-      }
-      for (let y = 0; y <= height; y += gridSize) {
-        ctx.beginPath()
-        ctx.moveTo(0, y)
-        ctx.lineTo(width, y)
-        ctx.stroke()
+      // dot grid, like drafting paper
+      const dpr = window.devicePixelRatio || 1
+      const gridSize = 24 * dpr * viewport.scale
+      const r = 1.1 * dpr
+      ctx.fillStyle = isDarkMode ? "rgba(236, 238, 240, 0.16)" : "rgba(29, 33, 37, 0.18)"
+      for (let x = gridSize; x < width; x += gridSize) {
+        for (let y = gridSize; y < height; y += gridSize) {
+          ctx.beginPath()
+          ctx.arc(x, y, r, 0, Math.PI * 2)
+          ctx.fill()
+        }
       }
     },
-    [isDarkMode],
+    [isDarkMode, viewport.scale],
   )
 
   const drawElement = useCallback((ctx: CanvasRenderingContext2D, element: DrawElement, isSelected = false) => {
     const dpr = window.devicePixelRatio || 1
-    ctx.strokeStyle = element.color
-    ctx.fillStyle = element.color
+    const strokeColor = isDarkMode && element.color === INK ? INK_ON_DARK : element.color
+    ctx.strokeStyle = strokeColor
+    ctx.fillStyle = strokeColor
     ctx.lineWidth = element.strokeWidth * dpr
     ctx.lineCap = "round"
     ctx.lineJoin = "round"
@@ -171,7 +170,7 @@ export function WhiteboardCanvas({
         ctx.stroke()
         break
       case "text":
-        ctx.font = `${element.fontSize * dpr}px Geist, sans-serif`
+        ctx.font = `${element.fontSize * dpr}px "Manrope Variable", system-ui, sans-serif`
         ctx.fillText(element.text, element.x, element.y)
         break
       case "sticky":
@@ -183,8 +182,8 @@ export function WhiteboardCanvas({
         ctx.shadowOffsetY = 4 * dpr
         ctx.fillRect(element.x, element.y, element.width, element.height)
         ctx.shadowColor = "transparent"
-        ctx.fillStyle = "#000000"
-        ctx.font = `${14 * dpr}px Geist, sans-serif`
+        ctx.fillStyle = "#1d2125"
+        ctx.font = `${14 * dpr}px "Manrope Variable", system-ui, sans-serif`
         // Word wrap text in sticky note
         const words = element.text.split(" ")
         let line = ""
@@ -208,7 +207,7 @@ export function WhiteboardCanvas({
     ctx.globalAlpha = 1
 
     if (isSelected) {
-      ctx.strokeStyle = "#3b82f6"
+      ctx.strokeStyle = "#2d4fe0"
       ctx.lineWidth = 2 * dpr
       ctx.setLineDash([5 * dpr, 5 * dpr])
 
@@ -239,14 +238,14 @@ export function WhiteboardCanvas({
 
       ctx.setLineDash([])
     }
-  }, [])
+  }, [isDarkMode])
 
   const render = useCallback(() => {
     const canvas = canvasRef.current
     const ctx = canvas?.getContext("2d")
     if (!canvas || !ctx) return
 
-    ctx.fillStyle = isDarkMode ? "#1a1a1a" : "#fafafa"
+    ctx.fillStyle = isDarkMode ? "#16181b" : "#f5f6f2"
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
     if (showGrid) drawGrid(ctx, canvas.width, canvas.height)
@@ -310,7 +309,7 @@ export function WhiteboardCanvas({
   }
 
   return (
-    <div ref={containerRef} className="w-full h-full">
+    <div ref={containerRef} className="absolute inset-0">
       <canvas
         ref={canvasRef}
         onMouseDown={handleMouseDown}

@@ -1,3 +1,7 @@
+/** Default pen colour. Drawn as near-black on the light board and near-white on the dark board. */
+export const INK = "#1d2125"
+export const INK_ON_DARK = "#eceef0"
+
 export type Tool =
   | "select"
   | "pen"

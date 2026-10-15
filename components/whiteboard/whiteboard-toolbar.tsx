@@ -1,11 +1,20 @@
 "use client"
 
 import type { ReactNode } from "react"
-import { Button } from "@/components/ui/button"
 import { Slider } from "@/components/ui/slider"
-import { Separator } from "@/components/ui/separator"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 import {
   Pencil,
   Square,
@@ -20,7 +29,6 @@ import {
   Grid3X3,
   Sun,
   Moon,
-  Palette,
   MousePointer2,
   MoveRight,
   Highlighter,
@@ -28,20 +36,49 @@ import {
   ZoomIn,
   ZoomOut,
   X,
+  Plus,
+  PaintBucket,
 } from "lucide-react"
 import type { Tool } from "@/lib/whiteboard-types"
+import { INK } from "@/lib/whiteboard-types"
 
 const PRESET_COLORS = [
-  "#000000",
-  "#ffffff",
-  "#ef4444",
-  "#f97316",
-  "#eab308",
-  "#22c55e",
-  "#06b6d4",
-  "#3b82f6",
-  "#8b5cf6",
-  "#ec4899",
+  { value: INK, name: "Ink" },
+  { value: "#e5484d", name: "Red" },
+  { value: "#f76b15", name: "Orange" },
+  { value: "#e2a400", name: "Yellow" },
+  { value: "#30a46c", name: "Green" },
+  { value: "#0d9488", name: "Teal" },
+  { value: "#2d4fe0", name: "Blue" },
+  { value: "#8e4ec6", name: "Purple" },
+]
+
+const STROKES = [
+  { value: 2, name: "Thin" },
+  { value: 4, name: "Medium" },
+  { value: 8, name: "Bold" },
+  { value: 14, name: "Extra bold" },
+]
+
+type ToolDef = { id: Tool; label: string; key: string; icon: ReactNode }
+
+const TOOL_GROUPS: ToolDef[][] = [
+  [{ id: "select", label: "Select", key: "V", icon: <MousePointer2 /> }],
+  [
+    { id: "pen", label: "Pen", key: "P", icon: <Pencil /> },
+    { id: "highlighter", label: "Highlighter", key: "H", icon: <Highlighter /> },
+  ],
+  [
+    { id: "rectangle", label: "Rectangle", key: "R", icon: <Square /> },
+    { id: "circle", label: "Circle", key: "C", icon: <Circle /> },
+    { id: "line", label: "Line", key: "L", icon: <Minus /> },
+    { id: "arrow", label: "Arrow", key: "A", icon: <MoveRight /> },
+  ],
+  [
+    { id: "text", label: "Text", key: "T", icon: <Type /> },
+    { id: "sticky", label: "Sticky note", key: "S", icon: <StickyNote /> },
+  ],
+  [{ id: "eraser", label: "Eraser", key: "E", icon: <Eraser /> }],
 ]
 
 interface ToolbarProps {
@@ -73,319 +110,319 @@ interface ToolbarProps {
   canRedo: boolean
   canDelete: boolean
   zoomLevel: number
+  elementCount: number
 }
 
-export function WhiteboardToolbar({
-  tool,
-  setTool,
-  color,
-  setColor,
-  strokeWidth,
-  setStrokeWidth,
-  fontSize,
-  setFontSize,
-  opacity,
-  setOpacity,
-  fillShapes,
-  setFillShapes,
-  showGrid,
-  setShowGrid,
-  isDarkMode,
-  setIsDarkMode,
-  onUndo,
-  onRedo,
-  onClear,
-  onExport,
-  onDelete,
-  onZoomIn,
-  onZoomOut,
-  onResetZoom,
-  canUndo,
-  canRedo,
-  canDelete,
-  zoomLevel,
-}: ToolbarProps) {
+const panel = "rounded-2xl border border-line bg-chrome/95 shadow-[0_1px_2px_rgb(0_0_0/0.06),0_8px_24px_-12px_rgb(0_0_0/0.18)] backdrop-blur"
+
+export function WhiteboardToolbar(props: ToolbarProps) {
+  const {
+    tool,
+    setTool,
+    color,
+    setColor,
+    strokeWidth,
+    setStrokeWidth,
+    fontSize,
+    setFontSize,
+    opacity,
+    setOpacity,
+    fillShapes,
+    setFillShapes,
+    showGrid,
+    setShowGrid,
+    isDarkMode,
+    setIsDarkMode,
+    onUndo,
+    onRedo,
+    onClear,
+    onExport,
+    onDelete,
+    onZoomIn,
+    onZoomOut,
+    onResetZoom,
+    canUndo,
+    canRedo,
+    canDelete,
+    zoomLevel,
+    elementCount,
+  } = props
+
+  const isShape = tool === "rectangle" || tool === "circle"
+  const showStyle = tool !== "select" && tool !== "eraser" && tool !== "sticky"
+
   return (
-    <TooltipProvider delayDuration={0}>
-      <div className="flex items-center gap-1 p-2 border-b border-border bg-card flex-wrap">
-        {/* Logo */}
-        <div className="flex items-center gap-2 px-3">
-          <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-            <Pencil className="w-4 h-4 text-primary-foreground" />
+    <TooltipProvider delayDuration={250}>
+      {/* Top-left: name + save state */}
+      <div className={`${panel} pointer-events-auto absolute left-3 top-3 hidden items-center gap-3 py-2 pl-2 pr-4 md:flex`}>
+        <span className="grid h-9 w-9 place-items-center rounded-xl bg-accent text-white">
+          <Pencil className="h-[18px] w-[18px]" strokeWidth={2.4} aria-hidden="true" />
+        </span>
+        <div className="leading-tight">
+          <h1 className="font-display text-lg font-semibold tracking-tight text-ink">Whiteboard</h1>
+          <p className="text-xs font-medium text-graphite">
+            {elementCount === 0 ? "Empty board" : `${elementCount} item${elementCount === 1 ? "" : "s"} · saved in this browser`}
+          </p>
+        </div>
+      </div>
+
+      {/* Left: tool rail */}
+      <nav
+        aria-label="Drawing tools"
+        className={`${panel} pointer-events-auto absolute left-3 top-1/2 flex -translate-y-1/2 flex-col gap-1 p-1.5`}
+      >
+        {TOOL_GROUPS.map((group, gi) => (
+          <div key={gi} className={`flex flex-col gap-1 ${gi > 0 ? "border-t border-line pt-1" : ""}`}>
+            {group.map((t) => (
+              <IconButton
+                key={t.id}
+                label={t.label}
+                shortcut={t.key}
+                active={tool === t.id}
+                onClick={() => setTool(t.id)}
+                side="right"
+              >
+                {t.icon}
+              </IconButton>
+            ))}
           </div>
-          <span className="font-semibold text-foreground hidden sm:inline">Whiteboard</span>
-        </div>
+        ))}
+      </nav>
 
-        <Separator orientation="vertical" className="h-8 mx-2 hidden sm:block" />
-
-        {/* Drawing Tools */}
-        <div className="flex items-center gap-1">
-          <ToolButton
-            icon={<MousePointer2 className="w-4 h-4" />}
-            label="Select (V)"
-            isActive={tool === "select"}
-            onClick={() => setTool("select")}
-          />
-          <ToolButton
-            icon={<Pencil className="w-4 h-4" />}
-            label="Pen (P)"
-            isActive={tool === "pen"}
-            onClick={() => setTool("pen")}
-          />
-          <ToolButton
-            icon={<Highlighter className="w-4 h-4" />}
-            label="Highlighter (H)"
-            isActive={tool === "highlighter"}
-            onClick={() => setTool("highlighter")}
-          />
-          <ToolButton
-            icon={<Square className="w-4 h-4" />}
-            label="Rectangle (R)"
-            isActive={tool === "rectangle"}
-            onClick={() => setTool("rectangle")}
-          />
-          <ToolButton
-            icon={<Circle className="w-4 h-4" />}
-            label="Circle (C)"
-            isActive={tool === "circle"}
-            onClick={() => setTool("circle")}
-          />
-          <ToolButton
-            icon={<Minus className="w-4 h-4" />}
-            label="Line (L)"
-            isActive={tool === "line"}
-            onClick={() => setTool("line")}
-          />
-          <ToolButton
-            icon={<MoveRight className="w-4 h-4" />}
-            label="Arrow (A)"
-            isActive={tool === "arrow"}
-            onClick={() => setTool("arrow")}
-          />
-          <ToolButton
-            icon={<Type className="w-4 h-4" />}
-            label="Text (T)"
-            isActive={tool === "text"}
-            onClick={() => setTool("text")}
-          />
-          <ToolButton
-            icon={<StickyNote className="w-4 h-4" />}
-            label="Sticky Note (S)"
-            isActive={tool === "sticky"}
-            onClick={() => setTool("sticky")}
-          />
-          <ToolButton
-            icon={<Eraser className="w-4 h-4" />}
-            label="Eraser (E)"
-            isActive={tool === "eraser"}
-            onClick={() => setTool("eraser")}
-          />
-        </div>
-
-        <Separator orientation="vertical" className="h-8 mx-2 hidden sm:block" />
-
-        {/* Color Picker */}
-        <Popover>
+      {/* Top-right: history, view and file actions */}
+      <div className={`${panel} pointer-events-auto absolute right-3 top-3 flex max-w-[calc(100vw-1.5rem)] items-center gap-1 overflow-x-auto p-1.5`}>
+        <IconButton label="Undo" shortcut="Ctrl Z" onClick={onUndo} disabled={!canUndo}>
+          <Undo2 />
+        </IconButton>
+        <IconButton label="Redo" shortcut="Ctrl Y" onClick={onRedo} disabled={!canRedo}>
+          <Redo2 />
+        </IconButton>
+        <Divider />
+        <IconButton label={showGrid ? "Hide grid" : "Show grid"} active={showGrid} onClick={() => setShowGrid(!showGrid)}>
+          <Grid3X3 />
+        </IconButton>
+        <IconButton label={isDarkMode ? "Light board" : "Dark board"} onClick={() => setIsDarkMode(!isDarkMode)}>
+          {isDarkMode ? <Sun /> : <Moon />}
+        </IconButton>
+        <Divider />
+        <IconButton label="Delete selected" shortcut="Del" onClick={onDelete} disabled={!canDelete}>
+          <X />
+        </IconButton>
+        <AlertDialog>
           <Tooltip>
             <TooltipTrigger asChild>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="icon" className="relative bg-transparent">
-                  <Palette className="w-4 h-4" />
-                  <div
-                    className="absolute bottom-1 right-1 w-2 h-2 rounded-full border border-border"
-                    style={{ backgroundColor: color }}
-                  />
-                </Button>
-              </PopoverTrigger>
+              <AlertDialogTrigger asChild>
+                <button
+                  type="button"
+                  aria-label="Clear board"
+                  disabled={elementCount === 0}
+                  className="grid h-10 w-10 place-items-center rounded-xl text-graphite transition-colors hover:bg-danger/10 hover:text-danger disabled:pointer-events-none disabled:opacity-35 [&_svg]:h-5 [&_svg]:w-5"
+                >
+                  <Trash2 />
+                </button>
+              </AlertDialogTrigger>
             </TooltipTrigger>
-            <TooltipContent>Color</TooltipContent>
+            <TooltipContent>Clear board</TooltipContent>
           </Tooltip>
-          <PopoverContent className="w-auto p-3" align="start">
-            <div className="space-y-3">
-              <div className="grid grid-cols-5 gap-2">
-                {PRESET_COLORS.map((presetColor) => (
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Clear the whole board?</AlertDialogTitle>
+              <AlertDialogDescription>
+                All {elementCount} items will be removed. You can still bring them back with Undo.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Keep drawing</AlertDialogCancel>
+              <AlertDialogAction onClick={onClear} className="bg-danger text-white hover:bg-danger/90">
+                Clear board
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+        <button
+          type="button"
+          onClick={onExport}
+          className="ml-1 flex h-10 shrink-0 items-center gap-2 rounded-xl bg-accent px-3 sm:px-4 text-sm font-semibold text-white transition-colors hover:bg-accent/90"
+        >
+          <Download className="h-4 w-4" aria-hidden="true" />
+          <span className="sr-only sm:not-sr-only">Export PNG</span>
+        </button>
+      </div>
+
+      {/* Bottom-centre: style bar for the current tool */}
+      {showStyle && (
+        <div
+          role="toolbar"
+          aria-label="Style"
+          className={`${panel} pointer-events-auto absolute bottom-3 left-1/2 flex max-w-[calc(100vw-1.5rem)] -translate-x-1/2 items-center gap-2 overflow-x-auto p-1.5`}
+        >
+          <div className="flex items-center gap-1" role="radiogroup" aria-label="Colour">
+            {PRESET_COLORS.map((c) => {
+              const active = color.toLowerCase() === c.value.toLowerCase()
+              return (
+                <button
+                  key={c.value}
+                  type="button"
+                  role="radio"
+                  aria-checked={active}
+                  aria-label={c.name}
+                  title={c.name}
+                  onClick={() => setColor(c.value)}
+                  className={`grid h-9 w-9 shrink-0 place-items-center rounded-full transition-transform hover:scale-110 ${
+                    active ? "ring-2 ring-accent ring-offset-2 ring-offset-chrome" : ""
+                  }`}
+                >
+                  <span
+                    className={`block h-6 w-6 rounded-full border border-black/10 ${c.value === INK ? "bg-ink" : ""}`}
+                    style={c.value === INK ? undefined : { backgroundColor: c.value }}
+                  />
+                </button>
+              )
+            })}
+            <label
+              className="relative grid h-9 w-9 shrink-0 cursor-pointer place-items-center rounded-full text-graphite hover:bg-hover"
+              title="Custom colour"
+            >
+              <Plus className="h-5 w-5" aria-hidden="true" />
+              <span className="sr-only">Custom colour</span>
+              <input
+                type="color"
+                value={color === INK ? "#1d2125" : color}
+                onChange={(e) => setColor(e.target.value)}
+                className="absolute inset-0 cursor-pointer opacity-0"
+              />
+            </label>
+          </div>
+
+          <Divider />
+
+          {tool === "text" ? (
+            <div className="flex items-center gap-3 px-2">
+              <span className="text-sm font-semibold text-graphite">Size</span>
+              <Slider
+                aria-label="Font size"
+                className="w-32"
+                value={[fontSize]}
+                onValueChange={([v]) => setFontSize(v)}
+                min={8}
+                max={72}
+                step={1}
+              />
+              <span className="w-10 text-right text-sm font-semibold tabular-nums text-ink">{fontSize}px</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1" role="radiogroup" aria-label="Stroke width">
+              {STROKES.map((s) => {
+                const active = strokeWidth === s.value
+                return (
                   <button
-                    key={presetColor}
-                    className={`w-8 h-8 rounded-lg border-2 transition-all ${color === presetColor ? "border-primary scale-110" : "border-border"}`}
-                    style={{ backgroundColor: presetColor }}
-                    onClick={() => setColor(presetColor)}
-                  />
-                ))}
-              </div>
-              <div className="flex items-center gap-2">
-                <label className="text-sm text-muted-foreground">Custom:</label>
-                <input
-                  type="color"
-                  value={color}
-                  onChange={(e) => setColor(e.target.value)}
-                  className="w-10 h-8 rounded cursor-pointer"
-                />
-              </div>
+                    key={s.value}
+                    type="button"
+                    role="radio"
+                    aria-checked={active}
+                    aria-label={s.name}
+                    title={`${s.name} (${s.value}px)`}
+                    onClick={() => setStrokeWidth(s.value)}
+                    className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl transition-colors ${
+                      active ? "bg-accent-soft text-accent" : "text-graphite hover:bg-hover"
+                    }`}
+                  >
+                    <span className="block rounded-full bg-current" style={{ width: 22, height: Math.max(2, s.value / 1.6) }} />
+                  </button>
+                )
+              })}
             </div>
-          </PopoverContent>
-        </Popover>
+          )}
 
-        {/* Stroke Width */}
-        <Popover>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="w-14 text-xs bg-transparent">
-                  {strokeWidth}px
-                </Button>
-              </PopoverTrigger>
-            </TooltipTrigger>
-            <TooltipContent>Stroke Width</TooltipContent>
-          </Tooltip>
-          <PopoverContent className="w-56 p-3" align="start">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Stroke Width: {strokeWidth}px</label>
-                <Slider
-                  value={[strokeWidth]}
-                  onValueChange={([value]) => setStrokeWidth(value)}
-                  min={1}
-                  max={20}
-                  step={1}
-                />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Opacity: {opacity}%</label>
-                <Slider value={[opacity]} onValueChange={([value]) => setOpacity(value)} min={10} max={100} step={5} />
-              </div>
-              {(tool === "rectangle" || tool === "circle") && (
-                <div className="flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    id="fill-shapes"
-                    checked={fillShapes}
-                    onChange={(e) => setFillShapes(e.target.checked)}
-                    className="rounded"
-                  />
-                  <label htmlFor="fill-shapes" className="text-sm">
-                    Fill shapes
-                  </label>
-                </div>
-              )}
-            </div>
-          </PopoverContent>
-        </Popover>
+          {isShape && (
+            <>
+              <Divider />
+              <IconButton
+                label={fillShapes ? "Outline only" : "Fill shape"}
+                active={fillShapes}
+                onClick={() => setFillShapes(!fillShapes)}
+              >
+                <PaintBucket />
+              </IconButton>
+            </>
+          )}
 
-        {/* Font Size (for text tool) */}
-        {tool === "text" && (
+          <Divider />
+
           <Popover>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="w-16 text-xs bg-transparent">
-                    {fontSize}pt
-                  </Button>
-                </PopoverTrigger>
-              </TooltipTrigger>
-              <TooltipContent>Font Size</TooltipContent>
-            </Tooltip>
-            <PopoverContent className="w-48 p-3" align="start">
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Font Size: {fontSize}pt</label>
-                <Slider value={[fontSize]} onValueChange={([value]) => setFontSize(value)} min={8} max={72} step={1} />
-              </div>
+            <PopoverTrigger asChild>
+              <button
+                type="button"
+                className="h-9 shrink-0 rounded-xl px-3 text-sm font-semibold tabular-nums text-ink hover:bg-hover"
+                aria-label={`Opacity ${opacity}%`}
+              >
+                {opacity}%
+              </button>
+            </PopoverTrigger>
+            <PopoverContent side="top" className="w-60 rounded-2xl p-4">
+              <p className="mb-3 text-sm font-semibold">Opacity · {opacity}%</p>
+              <Slider value={[opacity]} onValueChange={([v]) => setOpacity(v)} min={10} max={100} step={5} />
             </PopoverContent>
           </Popover>
-        )}
-
-        <div className="flex-1" />
-
-        {/* Right side actions */}
-        <div className="flex items-center gap-1">
-          <div className="flex items-center gap-1 mr-2">
-            <ToolButton
-              icon={<ZoomOut className="w-4 h-4" />}
-              label="Zoom Out (-)"
-              isActive={false}
-              onClick={onZoomOut}
-            />
-            <Button variant="outline" size="sm" className="w-16 text-xs bg-transparent" onClick={onResetZoom}>
-              {Math.round(zoomLevel * 100)}%
-            </Button>
-            <ToolButton icon={<ZoomIn className="w-4 h-4" />} label="Zoom In (+)" isActive={false} onClick={onZoomIn} />
-          </div>
-
-          <ToolButton
-            icon={<Grid3X3 className="w-4 h-4" />}
-            label="Toggle Grid"
-            isActive={showGrid}
-            onClick={() => setShowGrid(!showGrid)}
-          />
-          <ToolButton
-            icon={isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-            label="Toggle Theme"
-            isActive={false}
-            onClick={() => setIsDarkMode(!isDarkMode)}
-          />
-
-          <Separator orientation="vertical" className="h-8 mx-2 hidden sm:block" />
-
-          <ToolButton
-            icon={<Undo2 className="w-4 h-4" />}
-            label="Undo (Ctrl+Z)"
-            isActive={false}
-            onClick={onUndo}
-            disabled={!canUndo}
-          />
-          <ToolButton
-            icon={<Redo2 className="w-4 h-4" />}
-            label="Redo (Ctrl+Y)"
-            isActive={false}
-            onClick={onRedo}
-            disabled={!canRedo}
-          />
-
-          <Separator orientation="vertical" className="h-8 mx-2 hidden sm:block" />
-
-          <ToolButton
-            icon={<X className="w-4 h-4" />}
-            label="Delete Selected (Del)"
-            isActive={false}
-            onClick={onDelete}
-            disabled={!canDelete}
-          />
-          <ToolButton
-            icon={<Trash2 className="w-4 h-4" />}
-            label="Clear Canvas"
-            isActive={false}
-            onClick={onClear}
-            variant="destructive"
-          />
-          <ToolButton icon={<Download className="w-4 h-4" />} label="Export PNG" isActive={false} onClick={onExport} />
         </div>
+      )}
+
+      {/* Bottom-right: zoom */}
+      <div className={`${panel} pointer-events-auto absolute bottom-3 right-3 hidden items-center gap-0.5 p-1.5 sm:flex`}>
+        <IconButton label="Zoom out" shortcut="−" onClick={onZoomOut}>
+          <ZoomOut />
+        </IconButton>
+        <button
+          type="button"
+          onClick={onResetZoom}
+          title="Reset zoom (0)"
+          className="h-10 w-14 rounded-xl text-sm font-semibold tabular-nums text-ink hover:bg-hover"
+        >
+          {Math.round(zoomLevel * 100)}%
+        </button>
+        <IconButton label="Zoom in" shortcut="+" onClick={onZoomIn}>
+          <ZoomIn />
+        </IconButton>
       </div>
     </TooltipProvider>
   )
 }
 
-interface ToolButtonProps {
-  icon: ReactNode
-  label: string
-  isActive: boolean
-  onClick: () => void
-  disabled?: boolean
-  variant?: "default" | "destructive"
+function Divider() {
+  return <span aria-hidden="true" className="mx-0.5 h-6 w-px shrink-0 bg-line" />
 }
 
-function ToolButton({ icon, label, isActive, onClick, disabled, variant }: ToolButtonProps) {
+interface IconButtonProps {
+  label: string
+  shortcut?: string
+  active?: boolean
+  disabled?: boolean
+  onClick: () => void
+  children: ReactNode
+  side?: "top" | "right" | "bottom" | "left"
+}
+
+function IconButton({ label, shortcut, active, disabled, onClick, children, side = "bottom" }: IconButtonProps) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Button
-          variant={isActive ? "default" : variant === "destructive" ? "destructive" : "ghost"}
-          size="icon"
+        <button
+          type="button"
+          aria-label={label}
+          aria-pressed={active}
           onClick={onClick}
           disabled={disabled}
+          className={`grid h-10 w-10 shrink-0 place-items-center rounded-xl transition-colors disabled:pointer-events-none disabled:opacity-35 [&_svg]:h-5 [&_svg]:w-5 ${
+            active ? "bg-accent text-white" : "text-graphite hover:bg-hover hover:text-ink"
+          }`}
         >
-          {icon}
-        </Button>
+          {children}
+        </button>
       </TooltipTrigger>
-      <TooltipContent>{label}</TooltipContent>
+      <TooltipContent side={side} className="flex items-center gap-2">
+        {label}
+        {shortcut && <kbd className="rounded bg-white/15 px-1.5 py-0.5 font-sans text-[11px] font-semibold">{shortcut}</kbd>}
+      </TooltipContent>
     </Tooltip>
   )
 }

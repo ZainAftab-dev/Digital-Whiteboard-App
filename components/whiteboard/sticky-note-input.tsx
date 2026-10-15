@@ -3,15 +3,14 @@
 import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
-import { Button } from "@/components/ui/button"
 
 const STICKY_COLORS = [
-  "#fef08a", // yellow
-  "#fca5a5", // red
-  "#86efac", // green
-  "#93c5fd", // blue
-  "#c4b5fd", // purple
-  "#fdba74", // orange
+  { value: "#ffe58a", name: "Yellow" },
+  { value: "#ffc2b0", name: "Peach" },
+  { value: "#b8ecc8", name: "Mint" },
+  { value: "#bcd7ff", name: "Sky" },
+  { value: "#dcc8ff", name: "Lilac" },
+  { value: "#ffd0e6", name: "Pink" },
 ]
 
 interface StickyNoteInputProps {
@@ -23,7 +22,7 @@ interface StickyNoteInputProps {
 
 export function StickyNoteInput({ x, y, onSubmit, onCancel }: StickyNoteInputProps) {
   const [text, setText] = useState("")
-  const [selectedColor, setSelectedColor] = useState(STICKY_COLORS[0])
+  const [selectedColor, setSelectedColor] = useState(STICKY_COLORS[0].value)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
 
   useEffect(() => {
@@ -45,45 +44,59 @@ export function StickyNoteInput({ x, y, onSubmit, onCancel }: StickyNoteInputPro
 
   return (
     <div
-      className="absolute z-50 shadow-xl rounded-lg overflow-hidden"
+      className="absolute z-50 w-72 overflow-hidden rounded-xl shadow-[0_2px_4px_rgb(0_0_0/0.08),0_14px_30px_-12px_rgb(0_0_0/0.35)]"
       style={{
         left: x / (window.devicePixelRatio || 1),
         top: y / (window.devicePixelRatio || 1),
         backgroundColor: selectedColor,
       }}
+      role="dialog"
+      aria-label="New sticky note"
     >
-      <div className="p-3 w-52">
+      <div className="p-3">
         <textarea
           ref={textareaRef}
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type your note..."
-          className="w-full h-24 bg-transparent resize-none outline-none text-sm text-gray-800 placeholder-gray-500"
+          aria-label="Note text"
+          placeholder="Write a note…"
+          className="h-24 w-full resize-none bg-transparent text-[15px] font-medium leading-snug text-[#1d2125] outline-none focus-visible:outline-none placeholder:text-[#1d2125]/45"
         />
-        <div className="flex items-center justify-between mt-2">
-          <div className="flex gap-1">
-            {STICKY_COLORS.map((color) => (
-              <button
-                key={color}
-                className={`w-5 h-5 rounded-full border-2 ${selectedColor === color ? "border-gray-600" : "border-transparent"}`}
-                style={{ backgroundColor: color }}
-                onClick={() => setSelectedColor(color)}
-              />
-            ))}
-          </div>
-          <div className="flex gap-1">
-            <Button size="sm" variant="ghost" onClick={onCancel} className="h-7 px-2 text-xs">
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleSubmit}
-              className="h-7 px-2 text-xs bg-gray-800 hover:bg-gray-700 text-white"
-            >
-              Add
-            </Button>
-          </div>
+        <div className="mt-2 flex items-center gap-1" role="radiogroup" aria-label="Note colour">
+          {STICKY_COLORS.map((c) => (
+            <button
+              key={c.value}
+              type="button"
+              role="radio"
+              aria-checked={selectedColor === c.value}
+              aria-label={c.name}
+              className={`h-6 w-6 rounded-full border border-black/15 transition-transform hover:scale-110 ${
+                selectedColor === c.value ? "ring-2 ring-[#1d2125] ring-offset-1" : ""
+              }`}
+              style={{ backgroundColor: c.value }}
+              onClick={() => setSelectedColor(c.value)}
+            />
+          ))}
+        </div>
+      </div>
+      <div className="flex items-center justify-between gap-2 bg-black/5 px-3 py-2">
+        <span className="text-xs font-semibold whitespace-nowrap text-[#1d2125]/60">Ctrl+Enter</span>
+        <div className="flex gap-1">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="h-8 rounded-lg px-3 text-sm font-semibold text-[#1d2125] hover:bg-black/5"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleSubmit}
+            className="h-8 rounded-lg bg-[#1d2125] px-3 text-sm font-semibold text-white hover:bg-[#1d2125]/85"
+          >
+            Add note
+          </button>
         </div>
       </div>
     </div>

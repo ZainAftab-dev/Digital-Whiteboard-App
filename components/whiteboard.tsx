@@ -1,20 +1,22 @@
 "use client"
 
-import { useState, useCallback, useEffect, useRef } from "react"
+import { useState, useCallback, useEffect, useRef, type ReactNode } from "react"
 import { WhiteboardToolbar } from "./whiteboard/whiteboard-toolbar"
 import { WhiteboardCanvas } from "./whiteboard/whiteboard-canvas"
 import { WhiteboardTextInput } from "./whiteboard/whiteboard-text-input"
 import { StickyNoteInput } from "./whiteboard/sticky-note-input"
 import type { Tool, DrawElement, Point, HistoryState, ViewportState } from "@/lib/whiteboard-types"
+import { INK } from "@/lib/whiteboard-types"
+import { MousePointerClick } from "lucide-react"
 
 const generateId = () => Math.random().toString(36).substring(2, 9)
 
 export function Whiteboard() {
   const [tool, setTool] = useState<Tool>("pen")
-  const [color, setColor] = useState("#000000")
-  const [strokeWidth, setStrokeWidth] = useState(3)
+  const [color, setColor] = useState(INK)
+  const [strokeWidth, setStrokeWidth] = useState(4)
   const [fontSize, setFontSize] = useState(16)
-  const [showGrid, setShowGrid] = useState(false)
+  const [showGrid, setShowGrid] = useState(true)
   const [isDarkMode, setIsDarkMode] = useState(false)
   const [opacity, setOpacity] = useState(100)
   const [fillShapes, setFillShapes] = useState(false)
@@ -577,38 +579,8 @@ export function Whiteboard() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      <WhiteboardToolbar
-        tool={tool}
-        setTool={setTool}
-        color={color}
-        setColor={setColor}
-        strokeWidth={strokeWidth}
-        setStrokeWidth={setStrokeWidth}
-        fontSize={fontSize}
-        setFontSize={setFontSize}
-        opacity={opacity}
-        setOpacity={setOpacity}
-        fillShapes={fillShapes}
-        setFillShapes={setFillShapes}
-        showGrid={showGrid}
-        setShowGrid={setShowGrid}
-        isDarkMode={isDarkMode}
-        setIsDarkMode={setIsDarkMode}
-        onUndo={undo}
-        onRedo={redo}
-        onClear={clearCanvas}
-        onExport={exportCanvas}
-        onDelete={deleteSelected}
-        onZoomIn={zoomIn}
-        onZoomOut={zoomOut}
-        onResetZoom={resetZoom}
-        canUndo={historyIndex > 0}
-        canRedo={historyIndex < history.length - 1}
-        canDelete={!!selectedElementId}
-        zoomLevel={viewport.scale}
-      />
-      <div className="flex-1 relative overflow-hidden" style={{ cursor: getCursorStyle() }}>
+    <div className="relative h-full w-full overflow-hidden bg-board">
+      <div className="absolute inset-0" style={{ cursor: getCursorStyle() }}>
         <WhiteboardCanvas
           elements={elements}
           previewElement={previewElement}
@@ -625,7 +597,7 @@ export function Whiteboard() {
             x={textInput.x}
             y={textInput.y}
             fontSize={fontSize}
-            color={color}
+            color={color === INK && isDarkMode ? "#eceef0" : color}
             onSubmit={handleTextSubmit}
             onCancel={() => setTextInput(null)}
           />
@@ -639,6 +611,59 @@ export function Whiteboard() {
           />
         )}
       </div>
+
+      {elements.length === 0 && !isDrawing && !textInput && !stickyInput && (
+        <div className="pointer-events-none absolute inset-0 grid place-items-center pl-20 pr-6 md:px-6">
+          <div className="max-w-sm text-center">
+            <MousePointerClick className="mx-auto h-8 w-8 text-graphite/70" aria-hidden="true" />
+            <p className="mt-3 font-display text-2xl font-semibold text-ink">Start sketching</p>
+            <p className="mt-1 text-sm font-medium leading-relaxed text-graphite">
+              Pick a tool on the left, or press <Key>P</Key> for the pen, <Key>R</Key> for a rectangle and{" "}
+              <Key>S</Key> for a sticky note.
+            </p>
+          </div>
+        </div>
+      )}
+
+      <div className="pointer-events-none absolute inset-0">
+        <WhiteboardToolbar
+          tool={tool}
+          setTool={setTool}
+          color={color}
+          setColor={setColor}
+          strokeWidth={strokeWidth}
+          setStrokeWidth={setStrokeWidth}
+          fontSize={fontSize}
+          setFontSize={setFontSize}
+          opacity={opacity}
+          setOpacity={setOpacity}
+          fillShapes={fillShapes}
+          setFillShapes={setFillShapes}
+          showGrid={showGrid}
+          setShowGrid={setShowGrid}
+          isDarkMode={isDarkMode}
+          setIsDarkMode={setIsDarkMode}
+          onUndo={undo}
+          onRedo={redo}
+          onClear={clearCanvas}
+          onExport={exportCanvas}
+          onDelete={deleteSelected}
+          onZoomIn={zoomIn}
+          onZoomOut={zoomOut}
+          onResetZoom={resetZoom}
+          canUndo={historyIndex > 0}
+          canRedo={historyIndex < history.length - 1}
+          canDelete={!!selectedElementId}
+          zoomLevel={viewport.scale}
+          elementCount={elements.length}
+        />
+      </div>
     </div>
+  )
+}
+
+function Key({ children }: { children: ReactNode }) {
+  return (
+    <kbd className="rounded-md border border-line bg-chrome px-1.5 py-0.5 font-sans text-xs font-bold text-ink">{children}</kbd>
   )
 }

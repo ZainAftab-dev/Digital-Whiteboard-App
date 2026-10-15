@@ -1,22 +1,19 @@
 import type React from "react"
 import type { Metadata } from "next"
-import { Geist, Geist_Mono } from "next/font/google"
+import "@fontsource-variable/manrope"
+import "@fontsource-variable/bricolage-grotesque"
 import { Analytics } from "@vercel/analytics/next"
 import "./globals.css"
 
-const _geist = Geist({ subsets: ["latin"] })
-const _geistMono = Geist_Mono({ subsets: ["latin"] })
-
 export const metadata: Metadata = {
   title: "Digital Whiteboard",
-  description: "A feature-rich digital whiteboard with drawing tools, shapes, text, and more",
-    generator: 'v0.app'
+  description: "Sketch, diagram and take notes in your browser: pen, shapes, arrows, text, sticky notes and PNG export.",
 }
 
 export const viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f5f5" },
-    { media: "(prefers-color-scheme: dark)", color: "#1a1a1a" },
+    { media: "(prefers-color-scheme: light)", color: "#f5f6f2" },
+    { media: "(prefers-color-scheme: dark)", color: "#16181b" },
   ],
 }
 

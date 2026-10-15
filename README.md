@@ -10,13 +10,20 @@ A browser whiteboard for sketches, diagrams and quick notes, built with Next.js,
 ![Canvas](https://img.shields.io/badge/HTML5-Canvas-E34F26?logo=html5&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-<img src="docs/screenshot.png" alt="Digital Whiteboard with shapes, a freehand line, a highlighter stroke, text and a sticky note" width="760"/>
+<img src="docs/screenshot.png" alt="Digital Whiteboard with shapes, a freehand line, a highlighter stroke, text and a sticky note" width="820"/>
 
 </div>
 
 ---
 
 ## Features
+
+**Interface**
+- Full-screen canvas with floating panels: a tool rail on the left, history and export at the top right, a style bar at the bottom and zoom controls in the corner
+- Drafting-paper look: dot grid on a warm off-white board, graphite UI and a single marker-blue accent
+- Light and dark boards; the default ink colour switches between near-black and near-white so drawings stay visible
+- Friendly empty state with keyboard hints, tooltips that show each shortcut, and a confirm step before clearing the board
+- Responsive down to phone width, visible keyboard focus and reduced-motion support
 
 **Drawing tools**
 - **Pen:** smooth freehand strokes (quadratic-curve smoothing)
@@ -32,11 +39,11 @@ A browser whiteboard for sketches, diagrams and quick notes, built with Next.js,
 - Clear the whole board with one click
 
 **Canvas controls**
-- Preset and custom colours
-- Stroke width 1–20 px and opacity 10–100 %
+- Eight preset colours plus a custom colour picker
+- Four stroke weights (2, 4, 8 and 14 px) and opacity 10–100 %
 - Zoom from 20 % to 500 %
-- Background grid on or off
-- Light and dark themes
+- Dot grid on or off
+- Light and dark boards
 
 **Saving**
 - Export the board as a PNG image
@@ -57,6 +64,10 @@ A browser whiteboard for sketches, diagrams and quick notes, built with Next.js,
 
 On macOS use <kbd>Cmd</kbd> instead of <kbd>Ctrl</kbd>.
 
+## Dark board
+
+<img src="docs/dark.png" alt="The same board in dark mode" width="640"/>
+
 ## How it works
 
 Every stroke, shape, text block and sticky note is stored as an element object (type, points, colour, width, opacity). The canvas is redrawn from that list on every change, which makes undo/redo, selection, moving, erasing and saving simple: history is a list of element snapshots, and auto-save writes the current list to `localStorage`.
@@ -68,7 +79,7 @@ Every stroke, shape, text block and sticky note is stored as an element object (
 | Framework | Next.js 16 (App Router), React 19 |
 | Language | TypeScript |
 | Drawing | HTML5 Canvas 2D API |
-| UI | Tailwind CSS 4, shadcn/ui, Lucide icons |
+| UI | Tailwind CSS 4, shadcn/ui (tooltip, popover, slider, alert dialog), Lucide icons, Bricolage Grotesque + Manrope via Fontsource |
 | Persistence | Browser `localStorage` |
 
 ## Getting started
