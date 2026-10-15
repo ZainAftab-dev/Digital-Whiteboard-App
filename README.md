@@ -36,7 +36,7 @@ A browser whiteboard for sketches, diagrams and quick notes, built with Next.js,
 **Editing**
 - Select tool to pick an element, drag it to move it, and press <kbd>Delete</kbd> to remove it
 - Undo and redo with full history
-- Clear the whole board with one click
+- Clear the whole board (with a confirm step, and Undo still works afterwards)
 
 **Canvas controls**
 - Eight preset colours plus a custom colour picker
