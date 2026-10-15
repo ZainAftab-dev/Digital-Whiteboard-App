@@ -10,6 +10,8 @@ A browser whiteboard for sketches, diagrams and quick notes, built with Next.js,
 ![Canvas](https://img.shields.io/badge/HTML5-Canvas-E34F26?logo=html5&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
+**[▶ Live demo: digital-whiteboard-zain.vercel.app](https://digital-whiteboard-zain.vercel.app)**
+
 <img src="docs/screenshot.png" alt="Digital Whiteboard with shapes, a freehand line, a highlighter stroke, text and a sticky note" width="820"/>
 
 </div>
