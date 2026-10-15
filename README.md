@@ -1,85 +1,115 @@
-# Digital Whiteboard App
+<div align="center">
 
-A feature-rich digital whiteboard application built with Next.js, React, and HTML Canvas API. Create drawings, diagrams, flowcharts, and annotations with an intuitive interface.
+# 🖊️ Digital Whiteboard
 
-## Author
+A browser whiteboard for sketches, diagrams and quick notes, built with Next.js, React and the HTML Canvas API. Draw freehand, add shapes, text and sticky notes, then export your board as a PNG.
 
-**Zain Aftab**
+![Next.js](https://img.shields.io/badge/Next.js-16-000000?logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=black)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)
+![Canvas](https://img.shields.io/badge/HTML5-Canvas-E34F26?logo=html5&logoColor=white)
+![License](https://img.shields.io/badge/license-MIT-green)
+
+<img src="docs/screenshot.png" alt="Digital Whiteboard with shapes, a freehand line, a highlighter stroke, text and a sticky note" width="760"/>
+
+</div>
+
+---
 
 ## Features
 
-### Drawing Tools
-- **Pen** - Smooth freehand drawing with quadratic curve interpolation
-- **Highlighter** - Semi-transparent wide strokes for marking up content
-- **Shapes** - Rectangle, Circle, Line, and Arrow tools
-- **Text** - Click to place text with customizable font size
-- **Sticky Notes** - Colorful notes with 6 color options and text wrapping
-- **Eraser** - Remove specific elements without clearing the canvas
+**Drawing tools**
+- **Pen:** smooth freehand strokes (quadratic-curve smoothing)
+- **Highlighter:** wide, semi-transparent strokes
+- **Shapes:** rectangle, circle, line and arrow, with an optional solid fill
+- **Text:** click anywhere to type, font size 8–72 px
+- **Sticky notes:** six colours, text wraps automatically
+- **Eraser:** removes individual elements without clearing the board
 
-### Selection & Editing
-- **Selection Tool** - Click to select individual elements
-- **Move Elements** - Drag selected elements to reposition
-- **Delete Elements** - Remove selected elements with Delete/Backspace key
+**Editing**
+- Select tool to pick an element, drag it to move it, and press <kbd>Delete</kbd> to remove it
+- Undo and redo with full history
+- Clear the whole board with one click
 
-### Canvas Controls
-- **Color Picker** - Choose from presets or use custom colors
-- **Stroke Width** - Adjustable from 1-50px
-- **Opacity** - Control transparency from 10-100%
-- **Fill Mode** - Toggle solid fill for shapes
-- **Zoom** - Zoom in/out with smooth scaling (10%-300%)
+**Canvas controls**
+- Preset and custom colours
+- Stroke width 1–20 px and opacity 10–100 %
+- Zoom from 20 % to 500 %
+- Background grid on or off
+- Light and dark themes
 
-### History & Export
-- **Undo/Redo** - Unlimited history with Ctrl+Z / Ctrl+Y
-- **PNG Export** - Save your canvas as an image
-- **Auto-Save** - Drawings persist to localStorage automatically
+**Saving**
+- Export the board as a PNG image
+- Auto-save to `localStorage`, so your drawing is still there after a refresh
 
-### Display Options
-- **Grid Toggle** - Show/hide background grid
-- **Dark/Light Mode** - Switch between themes
+## Keyboard shortcuts
 
-## Keyboard Shortcuts
+| Key | Action | Key | Action |
+|---|---|---|---|
+| <kbd>V</kbd> | Select | <kbd>T</kbd> | Text |
+| <kbd>P</kbd> | Pen | <kbd>S</kbd> | Sticky note |
+| <kbd>H</kbd> | Highlighter | <kbd>E</kbd> | Eraser |
+| <kbd>R</kbd> | Rectangle | <kbd>+</kbd> / <kbd>=</kbd> | Zoom in |
+| <kbd>C</kbd> | Circle | <kbd>-</kbd> | Zoom out |
+| <kbd>L</kbd> | Line | <kbd>0</kbd> | Reset zoom |
+| <kbd>A</kbd> | Arrow | <kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd> | Undo / Redo |
+| <kbd>Delete</kbd> | Delete selected element | | |
 
-| Key | Action |
-|-----|--------|
-| V | Selection Tool |
-| P | Pen Tool |
-| H | Highlighter |
-| R | Rectangle |
-| C | Circle |
-| L | Line |
-| A | Arrow |
-| T | Text |
-| S | Sticky Note |
-| E | Eraser |
-| + | Zoom In |
-| - | Zoom Out |
-| 0 | Reset Zoom |
-| Ctrl+Z | Undo |
-| Ctrl+Y | Redo |
-| Delete | Remove Selected |
+On macOS use <kbd>Cmd</kbd> instead of <kbd>Ctrl</kbd>.
 
-## Tech Stack
+## How it works
 
-- **Framework:** Next.js 16 (App Router)
-- **UI Components:** shadcn/ui
-- **Styling:** Tailwind CSS v4
-- **Canvas:** HTML5 Canvas API
-- **State Management:** React useState/useRef
-- **Persistence:** localStorage
+Every stroke, shape, text block and sticky note is stored as an element object (type, points, colour, width, opacity). The canvas is redrawn from that list on every change, which makes undo/redo, selection, moving, erasing and saving simple: history is a list of element snapshots, and auto-save writes the current list to `localStorage`.
 
-## Getting Started
+## Tech stack
 
-1. Clone the repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-3. Run the development server:
-   ```bash
-   npm run dev
-   ```
-4. Open [http://localhost:3000](http://localhost:3000) in your browser
+| Layer | Tools |
+|---|---|
+| Framework | Next.js 16 (App Router), React 19 |
+| Language | TypeScript |
+| Drawing | HTML5 Canvas 2D API |
+| UI | Tailwind CSS 4, shadcn/ui, Lucide icons |
+| Persistence | Browser `localStorage` |
+
+## Getting started
+
+**Requirements:** Node.js 18.18 or newer.
+
+```bash
+git clone https://github.com/ZainAftab-dev/Digital-Whiteboard-App.git
+cd Digital-Whiteboard-App
+npm install
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000). For a production build: `npm run build` then `npm start`.
+
+## Project structure
+
+```
+app/
+├── layout.tsx                        # root layout and metadata
+├── page.tsx                          # renders <Whiteboard />
+└── globals.css
+components/
+├── whiteboard.tsx                    # state: elements, history, tools, viewport, shortcuts, auto-save, export
+└── whiteboard/
+    ├── whiteboard-toolbar.tsx        # tools, colours, stroke/opacity, zoom, grid, theme, undo/redo, clear, export
+    ├── whiteboard-canvas.tsx         # canvas rendering and mouse handling
+    ├── whiteboard-text-input.tsx     # inline text editor
+    └── sticky-note-input.tsx         # sticky-note editor with colour picker
+lib/
+└── whiteboard-types.ts               # Tool, DrawElement, Point, HistoryState, ViewportState
+```
+
+## Deployment
+
+Import the repository into [Vercel](https://vercel.com/new) and deploy with the default settings. No environment variables are needed.
+
+## Author
+
+**Zain Aftab** · [GitHub](https://github.com/ZainAftab-dev) · [LinkedIn](https://www.linkedin.com/in/zain-aftab-563727295/)
 
 ## License
 
-MIT
+[MIT](LICENSE)
